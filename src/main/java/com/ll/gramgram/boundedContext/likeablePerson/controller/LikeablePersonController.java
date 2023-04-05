@@ -9,9 +9,11 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -58,5 +60,14 @@ public class LikeablePersonController {
         }
 
         return "usr/likeablePerson/list";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String delete(@PathVariable("id") Long id){
+        InstaMember currentInstaMember = rq.getMember().getInstaMember(); //현재 로그인 된 회원 인스타
+
+        likeablePersonService.dislike(currentInstaMember, id);
+        return rq.redirectWithMsg("/likeablePerson/list", "삭제를 완료하였습니다.");
+
     }
 }
