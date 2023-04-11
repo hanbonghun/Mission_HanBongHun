@@ -32,7 +32,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String oauthId = oAuth2User.getName();
 
         String providerTypeCode = userRequest.getClientRegistration().getRegistrationId().toUpperCase();
-
+        if(providerTypeCode.equals("NAVER")){
+            oauthId = oauthId.split(",")[0].replace("{id=", "").replace("}", "");
+        }
         String username = providerTypeCode + "__%s".formatted(oauthId);
 
         Member member = memberService.whenSocialLogin(providerTypeCode, username).getData();
