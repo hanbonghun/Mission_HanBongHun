@@ -36,9 +36,9 @@ public class InstaMember {
     private String gender;
 
     @OneToMany(mappedBy = "fromInstaMember", cascade = {CascadeType.ALL})
-    @OrderBy("id desc")
-    @LazyCollection(LazyCollectionOption.EXTRA)  // .size() 또는 .contains()로 접근할 때, 컬렉션 전체를 초기화하지 않고 그 값만 가져온다.
-    @Builder.Default
+    @OrderBy("id desc") // 정렬
+    @LazyCollection(LazyCollectionOption.EXTRA)
+    @Builder.Default // @Builder 가 있으면 ` = new ArrayList<>();` 가 작동하지 않는다. 그래서 이걸 붙여야 한다.
     private List<LikeablePerson> fromLikeablePeople = new ArrayList<>();
 
     @OneToMany(mappedBy = "toInstaMember", cascade = {CascadeType.ALL})
@@ -48,10 +48,10 @@ public class InstaMember {
     private List<LikeablePerson> toLikeablePeople = new ArrayList<>();
 
     public void addFromLikeablePerson(LikeablePerson likeablePerson) {
-        fromLikeablePeople.add(0, likeablePerson);
+        fromLikeablePeople.add(0, likeablePerson); // @OrderBy("id desc") 때문에 앞으로 넣는다.
     }
 
     public void addToLikeablePerson(LikeablePerson likeablePerson) {
-        toLikeablePeople.add(0, likeablePerson);
+        toLikeablePeople.add(0, likeablePerson); // @OrderBy("id desc") 때문에 앞으로 넣는다.
     }
 }

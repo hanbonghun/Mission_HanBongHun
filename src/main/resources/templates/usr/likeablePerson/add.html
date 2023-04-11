@@ -17,7 +17,7 @@
 
     <th:block th:if="${@rq.member.hasConnectedInstaMember}">
         <script th:inline="javascript">
-            const myInstaMember = /*[[ ${@rq.member.instaMember} ]]*/ null;
+            const myInstaMember = /*[[ ${@rq.member.instaMember.username} ]]*/ null;
 
             function AddForm__submit(form) {
                 // username 이(가) 올바른지 체크
