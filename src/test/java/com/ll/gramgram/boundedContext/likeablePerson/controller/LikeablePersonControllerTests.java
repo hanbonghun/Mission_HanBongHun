@@ -1,6 +1,8 @@
 package com.ll.gramgram.boundedContext.likeablePerson.controller;
 
 
+import com.ll.gramgram.boundedContext.instaMember.entity.InstaMember;
+import com.ll.gramgram.boundedContext.likeablePerson.entity.LikeablePerson;
 import com.ll.gramgram.boundedContext.likeablePerson.service.LikeablePersonService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -216,5 +219,80 @@ public class LikeablePersonControllerTests {
         ;
 
         assertThat(likeablePersonService.findById(1L).isPresent()).isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("호감 표시(다른 인스타회원에게 중복으로 호감표시를 할 수 없다)")
+    @WithUserDetails("user3")
+    void t009() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "insta_user4")
+                        .param("attractiveTypeCode", "1")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(handler().methodName("add"))
+                .andExpect(status().is4xxClientError());
+        ;
+    }
+
+    @Test
+    @DisplayName("호감 표시(한명의 인스타회원이 11명 이상의 호감상대를 등록 할 수 없다.)")
+    @WithUserDetails("user3")
+    void t010() throws Exception {
+        String[] usernames = {"insta_user5", "insta_user6", "insta_user7","insta_user8", "insta_user9", "insta_user10","insta_user11","insta_user12"};
+        for(String username : usernames ){
+            mvc.perform(
+                    post("/likeablePerson/add")
+                            .with(csrf()) // CSRF 키 생성
+                            .param("username", username)
+                            .param("attractiveTypeCode", "1")
+            ).andDo(print()).andExpect(status().is3xxRedirection());
+        }
+        //WHEN
+        ResultActions resultActions = mvc.perform(
+                post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", "insta_user13")
+                        .param("attractiveTypeCode", "1")
+        ).andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(handler().handlerType(LikeablePersonController.class))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("호감 유형 변경(기존 객체의 호감 유형만을 변경)")
+    @WithUserDetails("user3")
+    void t011() throws Exception {
+        //GIVEN
+        LikeablePerson likeablePerson = likeablePersonService.findById(1L).get();
+        InstaMember toInstaMember = likeablePerson.getToInstaMember();
+        int originalTypeCode = likeablePerson.getAttractiveTypeCode();
+        int updatedTypeCode = originalTypeCode + 1;
+
+        ResultActions resultActions = mvc
+                .perform(post("/likeablePerson/add")
+                        .with(csrf()) // CSRF 키 생성
+                        .param("username", toInstaMember.getUsername())
+                        .param("attractiveTypeCode", updatedTypeCode+"")
+                )
+                .andDo(print());
+
+        // THEN
+        resultActions
+                .andExpect(status().is3xxRedirection());
+
+        LikeablePerson updatedLikeablePerson = likeablePersonService.findById(1L).get();
+        assertThat(updatedLikeablePerson.getAttractiveTypeCode()).isEqualTo(updatedTypeCode);
+
+
     }
 }

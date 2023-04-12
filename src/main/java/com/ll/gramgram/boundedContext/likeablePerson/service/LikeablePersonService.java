@@ -31,6 +31,21 @@ public class LikeablePersonService {
             return RsData.of("F-1", "본인을 호감상대로 등록할 수 없습니다.");
         }
 
+        List<LikeablePerson> fromLikeablePeople  = member.getInstaMember().getFromLikeablePeople();
+        for(LikeablePerson likeablePerson : fromLikeablePeople ){
+            if(likeablePerson.getToInstaMemberUsername().equals(username)){
+                if(likeablePerson.getAttractiveTypeCode()==attractiveTypeCode) return RsData.of("F-3", "다른 인스타회원에게 중복으로 호감표시를 할 수 없습니다.");
+                else {
+                    int originalAttractiveTypeCode = likeablePerson.getAttractiveTypeCode();
+                    likeablePerson.setAttractiveTypeCode(attractiveTypeCode);
+                    return RsData.of("S-2", "%s에 대한 호감 사유를 %s에서 %s(으)로변경하였습니다.".formatted(username,originalAttractiveTypeCode,attractiveTypeCode), likeablePerson);
+                }
+            }
+        }
+
+        if(fromLikeablePeople.size()==10) return RsData.of("F-1", "최대 10명의 회원을 등록할 수 있습니다.");
+
+
         InstaMember fromInstaMember = member.getInstaMember();
         InstaMember toInstaMember = instaMemberService.findByUsernameOrCreate(username).getData();
 
